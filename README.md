@@ -11,6 +11,16 @@ Split an `HTML` page into several standard-sized pages (e.g. `A4`, etc.).
 
 ---
 
+### 待办事项
+- **解决以下已知问题**
+- 集成 `html2canvas` `jsPDF` 
+
+### Todo
+- **Addresses the following known issues**
+- Integration with the `html2canvas` `jsPDF`
+
+---
+
 ### 已知问题:
 - 在 `Firefox` 浏览器上工作良好，但在 `Chromium` 上无法正常工作
 - 可能无法正确处理多层的 `HTML` 嵌套结构
