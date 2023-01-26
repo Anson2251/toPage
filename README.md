@@ -60,5 +60,8 @@ var a4Page = toPage.toSize("body", "A4");   // param@1 is an HTML Element or CSS
 
 Use `a4Page[pageNumber].innerHTML` to get the `HTML` code for the `pageNumber` page
 
-
 ---
+
+最后修改于 *2023年1月26日*
+
+Last modified on *January 26, 2023*
