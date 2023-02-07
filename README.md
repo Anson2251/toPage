@@ -52,7 +52,7 @@ toPage.paperSize = {    // Add page size information, the default includes A4
 
 toPage.onProcessPage(innerHTML){    // This function is triggered when pagination of a page is complete
     var newPage = document.createElement("div");
-    newPage.id = "__createdByToPDF__showPage__"
+    newPage.id = "__createdByToPDF__showPage__" // Elements with id that begin with "__createdByToPDF__" will not be placed in the sequence.
     newPage.style.height = 297*toPage.pageScale + "px";
     newPage.style.width = 210*toPage.pageScale + "px";
     newPage.style.border = "1px solid #888";
@@ -72,6 +72,6 @@ Use `a4Page[pageNumber].innerHTML` to get the `HTML` code for the `pageNumber` p
 
 ---
 
-最后修改于 *2023年1月26日*
+最后修改于 *2023年2月7日*
 
 Last modified on *January 26, 2023*
