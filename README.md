@@ -12,11 +12,9 @@ Split an `HTML` page into several standard-sized pages (e.g. `A4`, etc.).
 ---
 
 ### 待办事项
-- **解决以下已知问题**
 - 集成 `html2canvas` `jsPDF` 
 
 ### Todo
-- **Addresses the following known issues**
 - Integration with the `html2canvas` `jsPDF`
 
 ---
