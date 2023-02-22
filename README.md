@@ -21,18 +21,6 @@ Split an `HTML` page into several standard-sized pages (e.g. `A4`, etc.).
 
 ---
 
-### 已知问题:
-- 在 `Firefox` 浏览器上工作良好，但在 `Chromium` 上无法正常工作
-- 可能无法正确处理多层的 `HTML` 嵌套结构
-- 可能会在分页时丢失部分文本
-
-### Known issues:
-- Works fine on `Firefox` browser, but not in `Chromium`
-- Multiple layers of `HTML` nesting may not be handled correctly
-- Some text may be lost when paging
-
----
-
 ### 示例 / Example
 
 ```
@@ -72,6 +60,6 @@ Use `a4Page[pageNumber].innerHTML` to get the `HTML` code for the `pageNumber` p
 
 ---
 
-最后修改于 *2023年2月7日*
+最后修改于 *2023年2月22日*
 
-Last modified on *January 26, 2023*
+Last modified on *February 22, 2023*
