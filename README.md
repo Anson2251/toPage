@@ -3,6 +3,8 @@
 
 Split an `HTML` page into several standard-sized pages (e.g. `A4`, etc.).
 
+[更新日志](https://github.com/Anson2251/toPage/blob/main/CHANGELOG.md)
+
 ---
 
 **注意：该项目正处于测试阶段，不建议应用在生产环境**
