@@ -10,27 +10,25 @@ namespace toPage{
         [index: string]: size;
     }
 
-    export var paperSize: paperSize = {
+    export let paperSize: paperSize = {
         "A4": {
             height: 297,
             width: 210
         }
     }
 
-    export var depthLimit = 1000;
+    export let depthLimit = 1000;
 
-    export var pageScale: number = 4;
+    export let pageScale: number = 3;
 
     /**页面 */
-    export var paper: any[] = [];
+    export let paper: any[] = [];
 
-    export var page = 0;
-    /**分页信息 */
-    export var splitPageInfo: HTMLElement[][][] = [];
+    export let page = 0;
 
-    export var splitPageDistEleList: HTMLElement[] = [];
+    export let splitPageDistEleList: HTMLElement[] = [];
 
-    export var debugMode: boolean = false;
+    export let debugMode: boolean = true;
 
     namespace toPageConsole{
         export function log(...args: any[]){
@@ -51,106 +49,121 @@ namespace toPage{
     export function toSize(ele: HTMLSelector, size: keyof(paperSize)){
         if(!ele) return;
 
-        /**临时发布元素 */
-        var dist = document.getElementById("__createdByToPDF__distElement__");
-        if(!dist){
-            dist = document.createElement("div");
-            dist.style.height = paperSize[size].height * pageScale + "px";
-            dist.style.width = paperSize[size].width * pageScale + "px";
-            dist.style.border = "1px solid #888";
-            dist.style.overflow = "auto";
-            dist.id = "__createdByToPDF__distElement__";
-            document.body.appendChild(dist);
-        }else{
-            dist.innerHTML = "";
+        if(!paperSize[size]){
+            console.warn(`cannot find page size "${size}"`);
+            return;
         }
 
-        var parNode = (typeof(ele) === "string" ? document.querySelector(ele) : ele) as HTMLElement;
+        /**临时发布元素 */
+        let dist = getElementByCreateOrSearch("div", "__createdByToPDF__distElement__", (node: HTMLDivElement) => {
+            node.style.height = paperSize[size].height * pageScale + "px";
+            node.style.width = paperSize[size].width * pageScale + "px";
+            node.style.border = "1px solid #888";
+            node.style.overflow = "auto";
+            node.id = "__createdByToPDF__distElement__";
+        });
+
+        let parNode = (typeof(ele) === "string" ? document.querySelector(ele) : ele) as HTMLElement;
 
         if(!parNode) return;
 
-        fillDistEle(parNode, dist as HTMLDivElement);
+        let copy = document.createElement("div");
+        copy.innerHTML = parNode.innerHTML;
+
+        while(copy.innerText !== ""){
+            if(fillDistEle(copy, dist as HTMLDivElement) === 0) break;
+            if(copy.innerText === "") break;
+        }
+
         dist.remove();
+        copy.remove();
         return paper;
+    }
+
+    function getElementByCreateOrSearch(tagName: keyof(HTMLElementTagNameMap), id: string, onInit: Function){
+        let node = document.getElementById(id);
+        if(!node){
+            node = document.createElement(tagName);
+            onInit(node);
+            document.body.appendChild(node);
+        }else{
+            node.innerHTML = "";
+        }
+        return node;
+    }
+
+    /**
+     * 判断元素是否含有子元素
+     * @param parent 父元素
+     * @returns 
+     */
+    function hasChildNode(parent: HTMLElement): boolean{
+        for(let i = 0; i < parent.childNodes.length; i++){
+            if((parent.childNodes[i] as HTMLElement).tagName) return true;
+        }
+        return false;
+    }
+
+    /**
+     * 判断元素是否为 `toPDF` 创建的
+     * @param node 元素
+     * @returns 
+     */
+    function isCreatedByToPDF(node: HTMLElement){
+        return (node.id || "").startsWith("__createdByToPDF__");
     }
 
     /**
      * 填充临时发布元素
-     * @param parNode 父节点
-     * @param dist 临时发布元素
-     * @param fillEle 填充位置
+     * @param sourceNode 父节点
+     * @param distNode 临时发布元素
+     * @param fillNode 填充位置
      * @param index 起始引索
      * @returns 
      */
-    function fillDistEle(parNode: HTMLElement, dist: HTMLDivElement, fillEle?: HTMLElement, index?: number, depth?: number){
-        fillEle = fillEle || dist;
-
+    function fillDistEle(sourceNode: HTMLElement, distNode: HTMLDivElement, fillNode?: HTMLElement, index?: number, depth?: number){
+        fillNode = fillNode || distNode;
         depth = (!!depth || depth === 0) ? depth + 1 : 0;
-        
-        var nodes = parNode.childNodes;
         toPage.paper[toPage.page] = toPage.paper[toPage.page] || new Array();
-        toPage.splitPageInfo
-        var count = 0;
 
-        splitPageDistEleList.push(fillEle);
+        let nodes = sourceNode.childNodes;
+        let count = 0;
 
-        for(var i = index || 0; i < nodes.length; i++){
+        for(let i = 0; i < nodes.length; i++){
             /**当前元素 */
-            var curEle = (nodes[i] as HTMLElement).cloneNode() as HTMLElement;
+            let curEle = (nodes[i] as HTMLElement).cloneNode() as HTMLElement;
             curEle.innerHTML = (nodes[i] as HTMLElement).innerHTML;
 
-            if((curEle.id || "").startsWith("__createdByToPDF__")) continue; //如果为创建的元素或不带元素标签的文本，跳过
+            if(isCreatedByToPDF(curEle) || curEle.innerHTML === "") continue; //如果为创建的元素则跳过
 
-            if(isThresholdEle(curEle, dist)){
-                toPageConsole.log("遇到临界节点，尝试进入", curEle, curEle.childNodes.length);
-
-                if(curEle.childNodes.length > 1 && depth < toPage.depthLimit){//两种情况 1. 父元素只含有两个元素且第一个不是#text 2. 父元素含有三个及以上元素
-                    var curParNode = curEle.cloneNode() as HTMLDivElement;
+            if(isThresholdNode(curEle, distNode)){ // 遇到临界节点
+                toPageConsole.log(`搜索深度 ${depth}, 遇到临界节点，尝试进入`, curEle);
+                
+                if(hasChildNode(curEle) && depth < toPage.depthLimit){ // 含有子节点且不超过递归深度限制
+                    let curParNode = curEle.cloneNode() as HTMLDivElement;
                     curParNode.innerHTML = "";
-
-                    if(!toPage.splitPageInfo[toPage.page + 1]) toPage.splitPageInfo[toPage.page + 1] = [];
-                    toPage.splitPageInfo[toPage.page + 1].push([nodes[i] as HTMLElement, curParNode.cloneNode() as HTMLElement]);
-                    
-                    toPageConsole.log(depth, "临界节点含有子节点，进行裁剪", curParNode, toPage.splitPageInfo[toPage.page + 1])
-                    
-                    splitPageDistEleList[depth].appendChild(curParNode);
-                    fillDistEle(curEle, dist, curParNode, undefined, depth);
+                    fillNode.appendChild(curParNode);
+                    toPageConsole.log(`搜索深度: ${depth}, 临界节点含有子节点，进行裁剪`, curParNode)
+                    fillDistEle(nodes[i] as HTMLElement, distNode, curParNode, undefined, depth);
                 }else{ //换页
-                    toPageConsole.log(depth, "临界节点不含有子节点, 空间不足，添加页面");
-
-                    toPage.paper[toPage.page].innerHTML = dist.innerHTML;
-                    onProcessPage(toPage.paper[toPage.page].innerHTML);
-
-                    dist.innerHTML = "";
-                    toPage.page++;
-                    toPage.paper[toPage.page] = toPage.paper[toPage.page] || new Array();
-
-                    /**重新构建页面结构 */
-                    if(toPage.splitPageInfo[toPage.page]){
-                        fillEle = dist;
-                        toPage.splitPageInfo[toPage.page].forEach((item: any, index: number) => {
-                            (fillEle as HTMLDivElement).appendChild(item[1]);
-
-                            splitPageDistEleList[index] = item[1];
-                            fillEle = item[1];
-                        });
-                    }
-
-                    fillEle.appendChild(curEle);
+                    toPageConsole.log(`搜索深度 ${depth}, 临界节点不含有子节点, 空间不足，添加页面`);
+                    break;
                 }
             }else{
-                splitPageDistEleList[depth].appendChild(curEle);
-                toPageConsole.log(depth, "已推入节点", curEle, splitPageDistEleList[depth]);
+                (nodes[i] as HTMLElement).innerHTML = "";
+                fillNode.appendChild(curEle);
+                toPageConsole.log(`搜索深度 ${depth}, 已推入节点`, curEle, nodes[i]);
                 count++;
             }
         }
     
-        if(depth === 0) {
-            toPage.paper[toPage.page].innerHTML = dist.innerHTML;
-            dist.innerHTML = "";
-            onProcessPage(toPage.paper[toPage.page].innerHTML);
+        if(depth === 0 && distNode.innerHTML) {
+            toPage.paper[toPage.page] = distNode.innerHTML;
+            distNode.innerHTML = "";
+            onProcessPage(toPage.paper[toPage.page]);
+            toPage.page++;
         }
-        splitPageDistEleList.pop();
+
         return count;
     }
 
@@ -171,22 +184,22 @@ namespace toPage{
      * @param fillEle 填充位置
      * @returns 
      */
-    export function isThresholdEle(ele: HTMLElement, dist: HTMLElement, fillEle?: HTMLElement): boolean{
+    export function isThresholdNode(ele: HTMLElement, dist: HTMLElement, fillEle?: HTMLElement): boolean{
         if(!fillEle) fillEle = dist;
         (fillEle as HTMLDivElement).appendChild(ele);
-        var status = isOverflow(dist);
+        let status = isOverflow(dist);
         ele.remove();
         return status;
     }
 
     export function onProcessPage(innerHTML: string){
-        // var newPage = document.createElement("div");
-        // newPage.id = "__createdByToPDF__showPage__"
-        // newPage.style.height = 297 * pageScale + "px";
-        // newPage.style.width = 210 * pageScale + "px";
-        // newPage.style.border = "1px solid #888";
+        let newPage = document.createElement("div");
+        newPage.id = "__createdByToPDF__showPage__"
+        newPage.style.height = 297 * pageScale + "px";
+        newPage.style.width = 210 * pageScale + "px";
+        newPage.style.border = "1px solid #888";
         
-        // newPage.innerHTML = innerHTML
-        // document.body.appendChild(newPage);
+        newPage.innerHTML = innerHTML
+        document.body.appendChild(newPage);
     }
 }
