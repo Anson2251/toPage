@@ -54,9 +54,9 @@ var a4Page = toPage.toSize("body", "A4");   // param@1 is an HTML Element or CSS
 
 ```
 
-使用 `a4Page[pageNumber].innerHTML` 获取 `pageNumber` 页的 `HTML` 代码
+使用 `a4Page[pageNumber]` 获取 `pageNumber` 页的 `HTML` 代码
 
-Use `a4Page[pageNumber].innerHTML` to get the `HTML` code for the `pageNumber` page
+Use `a4Page[pageNumber]` to get the `HTML` code for the `pageNumber` page
 
 ---
 
