@@ -38,7 +38,7 @@ toPage.paperSize = {    // Add page size information, the default includes A4
     }
 }
 
-toPage.onProcessPage(innerHTML){    // This function is triggered when pagination of a page is complete
+toPage.onProcessPage = function(innerHTML){    // This function is triggered when pagination of a page is complete
     var newPage = document.createElement("div");
     newPage.id = "__createdByToPDF__showPage__" // Elements with id that begin with "__createdByToPDF__" will not be placed in the sequence.
     newPage.style.height = 297*toPage.pageScale + "px";
@@ -49,7 +49,7 @@ toPage.onProcessPage(innerHTML){    // This function is triggered when paginatio
     document.body.appendChild(newPage);
 }
 
-var a4Page = toPage.toSize("body", "A4");   // param@1 is an HTML Element or CSS Selector
+let a4Page = toPage.toSize("body", "A4");   // param@1 is an HTML Element or CSS Selector
                                             // param@2 is the page size
 
 ```
